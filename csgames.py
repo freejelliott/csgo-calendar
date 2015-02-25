@@ -18,7 +18,7 @@ date_convers = {
     'April' : '04'
 }
 
-def initaliseCalendar():
+def initialiseCalendar():
     FLAGS = gflags.FLAGS
 
     # Set up a Flow object to be used if we need to authenticate. This
@@ -90,42 +90,71 @@ def addFaceItInfo(service):
         created_event = service.events().insert(calendarId=calendarId, body=event).execute()
 
 def updateCEVOInfo(service):
+    return None
 
 def updateESEAInfo(service):
     time = 'unknown'
     for i in xrange(7):
-        url = 'http://play.esea.net/index.php?s=league&date='+date.today()+timedelta(days=i)+'&region_id=all&division_level=invite'
+        the_date = date.today()+timedelta(days=i)
+        url = 'http://play.esea.net/index.php?s=league&date='+str(the_date)+'&region_id=all&division_level=invite'
         soup = bs(urlopen(url))
         for match in soup.find_all(class_='match-container'):
-            m = re.search(r'Live|Schedule Pending', match.find('img').string)
-            if !m:
+            m = re.search(r'Completed|Live|Schedule Pending', match.find('img').string)
+            if not m:
                 m = re.search('(\d:\d\d)(\w)m$', match.find('img').string)
                 if m.group(2) == 'a':
                     time = '0'+m.group(1)
                 else:
+                    # potential bug here dealing with if a match is at midnight
+                    # ceebs dealing with unless it's a problem later
                     time = str(int(m.group(1)[0])+12)+m.group(1)[1:]
+
                 anchor_tags = match.find_all('a')
                 match_name = anchor_tags[1].string + ' vs ' + anchor_tags[3].string
-                match_desc = match.find(class_='match-footer').string
+                match_desc = 'ESEA ' + match.find(class_='match-footer').string
+                start_time = str(the_date) + 'T' + time + ':00.000+11:00'
+                end_time = str(the_date) + 'T' + time[0] + str(int(time[1]) + 1) + time[2:] + ':00.000+11:00'
+                existing_events = service.events().list(calendarId=calendarId, timeMin=start_time, timeMax = end_time).execute()
+                # check if the event already exists
+                eventExists = False
+                for event in existing_events['items']:
+                    if event['summary'] == match_name:
+                        eventExists = True
+                        break
+                if eventExists == False:
+                    event = {
+                        'summary' : match_name,
+                        'description' : match_desc,
+                        'start' : {
+                            'dateTime' : start_time
+                        },
+                        'end' : {
+                            'dateTime' : end_time
+                        }
+                    }
+                    created_event = service.events().insert(calendarId=calendarId, body=event).execute()
 
+            
 
 
 
 
 
 def updateStarLadderInfo(service):
+    return None
 
 def updateGameShowInfo(service):
+    return None
 
 
 
 
 def main():
-    service = initaliseCalendar()
+    service = initialiseCalendar()
     #addFaceItInfo(service)
-    addCEVOInfo(service)
-    addESEAInfo(service)
-    addStarLadderInfo(service)
+    #updateCEVOInfo(service)
+    updateESEAInfo(service)
+    #updateStarLadderInfo(service)
 
 
 if __name__ == "__main__":
