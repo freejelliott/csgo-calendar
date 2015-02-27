@@ -209,13 +209,13 @@ class CSGOCalendar:
             n = re.search(r'CEVO|ESEA|FACEIT|StarLadder|GameShow', existing_event['description'])
 
             if m.group(0) == n.group(0) and existing_event['summary'] == event['summary']:
-                if feed.date.rfc3339.tf_from_timestamp(event['start']['dateTime']) == \
+                if (feed.date.rfc3339.tf_from_timestamp(event['start']['dateTime']) == \
                     feed.date.rfc3339.tf_from_timestamp(existing_event['start']['dateTime']) and \
                     feed.date.rfc3339.tf_from_timestamp(event['end']['dateTime']) == \
-                    feed.date.rfc3339.tf_from_timestamp(existing_event['end']['dateTime']):
+                    feed.date.rfc3339.tf_from_timestamp(existing_event['end']['dateTime'])):
                     eventExists = True
-                else:
-                    # We delete the event if the time has been changed. It'll just get added again below
+                elif event['description'] != existing_event['description']:
+                    # We delete the event if the time or description has been changed. It'll just get added again below
                     print 'Deleted Event'
                     print existing_event
                     self.service.events().delete(calendarId=self.calendarId, eventId=existing_event['id']).execute()
