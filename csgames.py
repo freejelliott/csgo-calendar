@@ -195,39 +195,42 @@ class CSGOCalendar:
         pass
 
     def addEvent(self, event):
-        # Check if the event already exists
-        # We make an assumption that if a match has happened to have a changed time,
-        # it will have been changed within the day it was on
-        # and also that a single league won't have multiple matches with same team in a day
-        timeMin = event['start']['dateTime'][:11] + '00:00:00.000' + event['start']['dateTime'][-6:] 
-        timeMax = event['end']['dateTime'][:11] + '23:59:00.000' + event['end']['dateTime'][-6:]
-        existing_events = self.service.events().list(calendarId=self.calendarId, timeMin=timeMin,
-                                                                            timeMax=timeMax).execute()
-        eventExists = False
-        for existing_event in existing_events['items']:
-            m = re.search(r'CEVO|ESEA|FACEIT|StarLadder|GameShow', event['description'])
-            n = re.search(r'CEVO|ESEA|FACEIT|StarLadder|GameShow', existing_event['description'])
+        # Check if the event exists within a day by finding the match with the same league and summary.
+        # If it exists, update it with new info, otherwise add it
 
-            if m.group(0) == n.group(0) and existing_event['summary'] == event['summary']:
-                if (feed.date.rfc3339.tf_from_timestamp(event['start']['dateTime']) == \
-                    feed.date.rfc3339.tf_from_timestamp(existing_event['start']['dateTime']) and \
-                    feed.date.rfc3339.tf_from_timestamp(event['end']['dateTime']) == \
-                    feed.date.rfc3339.tf_from_timestamp(existing_event['end']['dateTime'])):
-                    eventExists = True
-                elif event['description'] != existing_event['description']:
-                    # We delete the event if the time or description has been changed. It'll just get added again below
-                    print 'Deleted Event'
-                    print existing_event
-                    self.service.events().delete(calendarId=self.calendarId, eventId=existing_event['id']).execute()
-                break
-        if not eventExists:
-            self.service.events().insert(calendarId=self.calendarId, body=event).execute()
-            print 'Added Event'
-            print event
-                
-    
-    
+        filterTimeMin = event['start']['dateTime'][:11] + '00:00:00.000' + event['start']['dateTime'][-6:] 
+        filterTimeMax = event['end']['dateTime'][:11] + '23:59:00.000' + event['end']['dateTime'][-6:]
+        existing_events = self.service.events().list(calendarId=self.calendarId, timeMin=filterTimeMin,
+                                                                            timeMax=filterTimeMax).execute()
+        event_exists = False
+        for existing_event in existing_events['items']:
+            m = re.search(r'CEVO|ESEA|FACEIT|StarLadder|GameShow|iBUYPOWER', event['description'])
+            n = re.search(r'CEVO|ESEA|FACEIT|StarLadder|GameShow|iBUYPOWER', existing_event['description'])
             
+            if m.group(0) == n.group(0) and existing_event['summary'] == event['summary']:
+                event_exists = True
+                # if the time is different, or the description is different, update it
+                if not self.sameEventTime(event, existing_event) or existing_event['description'] !=  event['description']:
+                    updated_event = self.service.events().update(calendarId=self.calendarId, eventId=existing_event['id'], body=event).execute()
+                    print '*** Updated Event ***'
+                    print updated_event['summary']
+                    print updated_event['description']
+                    print updated_event['start']['dateTime']
+                    print updated_event['end']['dateTime']
+                break
+        
+        if not event_exists:
+            added_event = self.service.events().insert(calendarId=self.calendarId, body=event).execute()
+            print '*** Added Event ***'
+            print added_event['summary']
+            print added_event['description']
+            print added_event['start']['dateTime'],
+            print added_event['end']['dateTime']
+    
+    
+    def sameEventTime(self, eventA, eventB):
+        return feed.date.rfc3339.tf_from_timestamp(eventA['start']['dateTime']) == feed.date.rfc3339.tf_from_timestamp(eventB['start']['dateTime']) and \
+                feed.date.rfc3339.tf_from_timestamp(eventA['end']['dateTime']) == feed.date.rfc3339.tf_from_timestamp(eventB['end']['dateTime'])
             
 
 
