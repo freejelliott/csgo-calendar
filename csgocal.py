@@ -1,3 +1,4 @@
+import os
 import re
 import httplib2
 import feed.date.rfc3339
@@ -8,12 +9,14 @@ from urllib2 import urlopen, Request
 from datetime import date, timedelta, datetime
 from oauth2client.client import SignedJwtAssertionCredentials
 
+dir = os.path.dirname(__file__)
 
 class CSGOCalendar:
     'Provides access to a Google Calendar through the Google Calendar API'
     def __init__(self):
         client_email = '459471911785-ruid59gu06t6jr7djbo6t4882qrr0u19@developer.gserviceaccount.com'
-        with open('My Project-e6813da287b5.p12') as f:
+        filename = os.path.join(dir, 'My Project-e6813da287b5.p12')
+        with open(filename) as f:
             private_key = f.read()
 
         credentials = SignedJwtAssertionCredentials(client_email, private_key, 
@@ -197,7 +200,8 @@ class CSGOCalendar:
         existing_events = self.service.events().list(calendarId=self.calendarId, timeMin=filterTimeMin,
                                                                             timeMax=filterTimeMax).execute()
         event_exists = False
-        f = open('match_log', 'a')
+        filename = os.path.join(dir, 'match_log')
+        f = open(filename, 'a')
         for existing_event in existing_events['items']:
             m = re.search(r'CEVO|ESEA|FACEIT|StarLadder|GameShow|iBUYPOWER', event['description'])
             n = re.search(r'CEVO|ESEA|FACEIT|StarLadder|GameShow|iBUYPOWER', existing_event['description'])
