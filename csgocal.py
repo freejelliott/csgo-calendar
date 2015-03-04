@@ -1,4 +1,3 @@
-#!/home/jelliott/csgo_cal_updater/env/bin/python
 import re
 import httplib2
 import feed.date.rfc3339
@@ -12,7 +11,7 @@ from oauth2client.client import SignedJwtAssertionCredentials
 
 class CSGOCalendar:
     'Provides access to a Google Calendar through the Google Calendar API'
-    def __init__(self, faceit_path):
+    def __init__(self):
         client_email = '459471911785-ruid59gu06t6jr7djbo6t4882qrr0u19@developer.gserviceaccount.com'
         with open('My Project-e6813da287b5.p12') as f:
             private_key = f.read()
@@ -53,18 +52,16 @@ class CSGOCalendar:
             'December' : '12',
             'Dec' : '12'
         }
-
-        self.faceit_path = faceit_path
     
     def updateAll(self):
-        #self.updateFaceItInfo()
+        self.updateFaceItInfo()
         self.updateCEVOInfo()
         self.updateESEAInfo()
         self.updateStarLadderInfo()
         self.updateGameShowInfo()
 
     def updateFaceItInfo(self):
-        f = open(self.faceit_path, 'r')
+        f = open('', 'r')
 
         month = 'unknown'
         date = 'unknown'
@@ -227,13 +224,3 @@ class CSGOCalendar:
     def sameEventTime(self, eventA, eventB):
         return feed.date.rfc3339.tf_from_timestamp(eventA['start']['dateTime']) == feed.date.rfc3339.tf_from_timestamp(eventB['start']['dateTime']) and \
                 feed.date.rfc3339.tf_from_timestamp(eventA['end']['dateTime']) == feed.date.rfc3339.tf_from_timestamp(eventB['end']['dateTime'])
-            
-
-
-    
-def main():
-    calendar = CSGOCalendar('/home/jelliott/csgo_cal_updater/faceitinfo')
-    calendar.updateAll()
-
-if __name__ == "__main__":
-    main()
