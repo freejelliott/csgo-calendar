@@ -1,16 +1,12 @@
-import gflags
+#!/home/jelliott/csgo_cal_updater/env/bin/python
 import re
 import httplib2
 import feed.date.rfc3339
 
 from apiclient.discovery import build
-from oauth2client.file import Storage
-from oauth2client.client import OAuth2WebServerFlow
-from oauth2client.tools import run
 from bs4 import BeautifulSoup as bs
 from urllib2 import urlopen
-from datetime import date, timedelta
-
+from datetime import date, timedelta, datetime
 from oauth2client.client import SignedJwtAssertionCredentials
 
 
@@ -213,20 +209,21 @@ class CSGOCalendar:
                 # if the time is different, or the description is different, update it
                 if not self.sameEventTime(event, existing_event) or existing_event['description'] !=  event['description']:
                     updated_event = self.service.events().update(calendarId=self.calendarId, eventId=existing_event['id'], body=event).execute()
-                    f.write('*** Updated Event ***\n')
+                    f.write('*** Updated Event *** ' + str(datetime.now()) + '\n')
                     f.write('Old\n')
                     f.write(existing_event['summary'] + ' | ' + existing_event['start']['dateTime'] + ' -- ' + existing_event['end']['dateTime'] + ' | ' + existing_event['description'] + '\n')
                     f.write('New\n')
                     f.write(updated_event['summary'] + ' | ' + updated_event['start']['dateTime'] + ' -- ' + updated_event['end']['dateTime'] + ' | ' + updated_event['description'] + '\n')
+                    f.write('\n')
                 break
         
         if not event_exists:
             added_event = self.service.events().insert(calendarId=self.calendarId, body=event).execute()
-            f.write('*** Added Event ***\n')
+            f.write('*** Added Event *** ' +  str(datetime.now()) + '\n')
             f.write(added_event['summary'] + ' | ' + added_event['start']['dateTime'] + ' -- ' + added_event['end']['dateTime'] + ' | ' + added_event['description'] + '\n')
-        else:
-            f.write('No matches added | ' + datetime.datetime.now() + '\n)
+            f.write('\n')
         f.close()
+
     def sameEventTime(self, eventA, eventB):
         return feed.date.rfc3339.tf_from_timestamp(eventA['start']['dateTime']) == feed.date.rfc3339.tf_from_timestamp(eventB['start']['dateTime']) and \
                 feed.date.rfc3339.tf_from_timestamp(eventA['end']['dateTime']) == feed.date.rfc3339.tf_from_timestamp(eventB['end']['dateTime'])
