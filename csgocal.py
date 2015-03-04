@@ -4,7 +4,7 @@ import feed.date.rfc3339
 
 from apiclient.discovery import build
 from bs4 import BeautifulSoup as bs
-from urllib2 import urlopen
+from urllib2 import urlopen, Request
 from datetime import date, timedelta, datetime
 from oauth2client.client import SignedJwtAssertionCredentials
 
@@ -151,7 +151,8 @@ class CSGOCalendar:
         for i in xrange(7):
             the_date = date.today()+timedelta(days=i)
             url = 'http://play.esea.net/index.php?s=league&date='+str(the_date)+'&region_id=all&division_level=invite'
-            soup = bs(urlopen(url))
+            request = Request(url, headers={'Cookie' : 'settings_time_zone=Australia/Sydney'})
+            soup = bs(urlopen(request))
             for match in soup.find_all(class_='match-container'):
                 m = re.search(r'Completed|Live|Schedule Pending', match.find('img').string)
                 if not m:
