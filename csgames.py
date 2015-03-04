@@ -203,6 +203,7 @@ class CSGOCalendar:
         existing_events = self.service.events().list(calendarId=self.calendarId, timeMin=filterTimeMin,
                                                                             timeMax=filterTimeMax).execute()
         event_exists = False
+        f = open('match_log', 'a')
         for existing_event in existing_events['items']:
             m = re.search(r'CEVO|ESEA|FACEIT|StarLadder|GameShow|iBUYPOWER', event['description'])
             n = re.search(r'CEVO|ESEA|FACEIT|StarLadder|GameShow|iBUYPOWER', existing_event['description'])
@@ -212,20 +213,20 @@ class CSGOCalendar:
                 # if the time is different, or the description is different, update it
                 if not self.sameEventTime(event, existing_event) or existing_event['description'] !=  event['description']:
                     updated_event = self.service.events().update(calendarId=self.calendarId, eventId=existing_event['id'], body=event).execute()
-                    with open('match_log', 'a') as f:
-                        f.write('*** Updated Event ***\n')
-                        f.write('Old\n')
-                        f.write(existing_event['summary'] + ' | ' + existing_event['start']['dateTime'] + ' -- ' + existing_event['end']['dateTime'] + ' | ' + existing_event['description'] + '\n')
-                        f.write('New\n')
-                        f.write(updated_event['summary'] + ' | ' + updated_event['start']['dateTime'] + ' -- ' + updated_event['end']['dateTime'] + ' | ' + updated_event['description'] + '\n')
+                    f.write('*** Updated Event ***\n')
+                    f.write('Old\n')
+                    f.write(existing_event['summary'] + ' | ' + existing_event['start']['dateTime'] + ' -- ' + existing_event['end']['dateTime'] + ' | ' + existing_event['description'] + '\n')
+                    f.write('New\n')
+                    f.write(updated_event['summary'] + ' | ' + updated_event['start']['dateTime'] + ' -- ' + updated_event['end']['dateTime'] + ' | ' + updated_event['description'] + '\n')
                 break
         
         if not event_exists:
             added_event = self.service.events().insert(calendarId=self.calendarId, body=event).execute()
-            with open('match_log', 'a') as f:
-                f.write('*** Added Event ***\n')
-                f.write(added_event['summary'] + ' | ' + added_event['start']['dateTime'] + ' -- ' + added_event['end']['dateTime'] + ' | ' + added_event['description'] + '\n')
-
+            f.write('*** Added Event ***\n')
+            f.write(added_event['summary'] + ' | ' + added_event['start']['dateTime'] + ' -- ' + added_event['end']['dateTime'] + ' | ' + added_event['description'] + '\n')
+        else:
+            f.write('No matches added | ' + datetime.datetime.now() + '\n)
+        f.close()
     def sameEventTime(self, eventA, eventB):
         return feed.date.rfc3339.tf_from_timestamp(eventA['start']['dateTime']) == feed.date.rfc3339.tf_from_timestamp(eventB['start']['dateTime']) and \
                 feed.date.rfc3339.tf_from_timestamp(eventA['end']['dateTime']) == feed.date.rfc3339.tf_from_timestamp(eventB['end']['dateTime'])
