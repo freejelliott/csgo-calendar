@@ -3,7 +3,7 @@ from csgocal import CSGOCalendar
 
 def main():
     calendar = CSGOCalendar()
-    calendar.updateESEAInfo()
+    calendar.update()
 
 if __name__ == "__main__":
     main()
