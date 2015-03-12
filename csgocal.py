@@ -89,15 +89,18 @@ class CSGOCalendar:
                         streams.append(stream_soup.text.strip())
                     for stream_soup in league_soup.find_all(class_='stream-box'):
                         m = re.search('twitch|hitbox|mlg', str(stream_soup))
-                        if m.group(0) == 'twitch':
-                            stream_urls.append(stream_soup.find('object')['data'])
-                            stream_urls[-1] = stream_urls[-1].replace('widgets/live_embed_player.swf?channel=', '')
-                        elif m.group(0) == 'hitbox':
-                            stream_urls.append(stream_soup.find('iframe')['src'])
-                            stream_urls[-1] = stream_urls[-1].replace('#!/embed/', '')
-                        elif m.group(0) == 'mlg':
-                            stream_urls.append(stream_soup.find('iframe')['src'])
-                            stream_urls[-1] = stream_urls[-1].replace('player/embed/', '').replace('?autoplay=0', '')
+                        if m:
+                            if m.group(0) == 'twitch':
+                                stream_urls.append(stream_soup.find('object')['data'])
+                                stream_urls[-1] = stream_urls[-1].replace('widgets/live_embed_player.swf?channel=', '')
+                            elif m.group(0) == 'hitbox':
+                                stream_urls.append(stream_soup.find('iframe')['src'])
+                                stream_urls[-1] = stream_urls[-1].replace('#!/embed/', '')
+                            elif m.group(0) == 'mlg':
+                                stream_urls.append(stream_soup.find('iframe')['src'])
+                                stream_urls[-1] = stream_urls[-1].replace('player/embed/', '').replace('?autoplay=0', '')
+                        else:
+                            stream_urls.append('Unknown streaming platform. Sorry, got no url for you.')
 
                 league = league_info.text.strip()
                 best_of_format = match_soup.find(class_='bestof').text.strip()
@@ -110,10 +113,11 @@ class CSGOCalendar:
                 start_min = int(m.groupdict()['start_min'])
                 datetime_info = datetime(2015, month, day, start_hour, start_min)
                 stream_info = '-- Streams --\n'
-                for i in xrange(len(streams)):
-                    stream_info += '  ' + streams[i] + ': ' + stream_urls[i] + '\n'
                 if len(streams) == 0:
                     stream_info = 'A stream was not found for this match'
+                else:
+                    for i in xrange(len(streams)):
+                        stream_info += '  ' + streams[i] + ': ' + stream_urls[i] + '\n'
 
                 event = {
                     'summary' : summary,
