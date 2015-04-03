@@ -10,19 +10,19 @@ from urllib2 import urlopen, Request
 from datetime import date, timedelta, datetime
 from oauth2client.client import SignedJwtAssertionCredentials
 
-diry = os.path.dirname(__file__)
+wdir = os.path.dirname(__file__)
 
 class CSGOCalendar:
     'Provides access to a Google Calendar through the Google Calendar API'
     def __init__(self):
-        filename = os.path.join(diry, 'config.json')
+        filename = os.path.join(wdir, 'config.json')
         with open(filename) as config_file:
             config_data = json.load(config_file)
             client_email = config_data['client_email']
             sub = config_data['sub']
             developerKey = config_data['developerKey']
             calendarId = config_data['calendarId']
-        filename = os.path.join(diry, 'private_key.p12')
+        filename = os.path.join(wdir, 'private_key.p12')
         with open(filename) as f:
             private_key = f.read()
 
@@ -149,7 +149,7 @@ class CSGOCalendar:
         existing_events = self.service.events().list(calendarId=self.calendarId, timeMin=filterTimeMin,
                                                                             timeMax=filterTimeMax).execute()
         event_exists = False
-        filename = os.path.join(dir, 'match_log')
+        filename = os.path.join(wdir, 'match_log')
         f = open(filename, 'a')
         for existing_event in existing_events['items']:
             if existing_event['source']['url'] == event['source']['url']:
