@@ -2,34 +2,40 @@ import os
 import re
 import httplib2
 import feed.date.rfc3339
-
+import datetime as dt
+import json
 from apiclient.discovery import build
 from bs4 import BeautifulSoup as bs
 from urllib2 import urlopen, Request
 from datetime import date, timedelta, datetime
-import datetime as dt
 from oauth2client.client import SignedJwtAssertionCredentials
 
-dir = os.path.dirname(__file__)
+diry = os.path.dirname(__file__)
 
 class CSGOCalendar:
     'Provides access to a Google Calendar through the Google Calendar API'
     def __init__(self):
-        client_email = '459471911785-ruid59gu06t6jr7djbo6t4882qrr0u19@developer.gserviceaccount.com'
-        filename = os.path.join(dir, 'My Project-e6813da287b5.p12')
+        filename = os.path.join(diry, 'config.json')
+        with open(filename) as config_file:
+            config_data = json.load(config_file)
+            client_email = config_data['client_email']
+            sub = config_data['sub']
+            developerKey = config_data['developerKey']
+            calendarId = config_data['calendarId']
+        filename = os.path.join(diry, 'private_key.p12')
         with open(filename) as f:
             private_key = f.read()
 
         credentials = SignedJwtAssertionCredentials(client_email, private_key, 
-                'https://www.googleapis.com/auth/calendar', sub='joshualjelliott@gmail.com')
+                'https://www.googleapis.com/auth/calendar', sub=sub)
 
         http = httplib2.Http()
         http = credentials.authorize(http)
 
         self.service = build(serviceName='calendar', version='v3', http=http,
-               developerKey='AIzaSyAICooyJLruGo-JTS_lN92hGDUztc7z5IU')
+               developerKey=developerKey)
 
-        self.calendarId = 'k3nafbeprkllv2q45bvpvhodig@group.calendar.google.com'
+        self.calendarId = calendarId 
 
         self.date_convers = {
             'January' : '01',
