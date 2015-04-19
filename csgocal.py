@@ -70,7 +70,12 @@ class CSGOCalendar:
         soup = bs(urlopen(request))
         # absolutely unreadable shit. sorry kinda not sorry
         # we have a few pages to work through
-        num_pages = int(soup.find_all(class_='box')[1].find_all('a')[-1]['href'][-1])
+        num_page_info = soup.find_all(class_='box')[1].find(class_='pages')
+        num_pages = 1
+        if num_page_info is not None:
+            num_page_info = num_page_info.find_all('a')[-1]['href']
+            m = re.search(r'\d+$', num_page_info)
+            num_pages = int(m.group(0))
         for soup_url in ['http://www.gosugamers.net/counterstrike/gosubet?u-page=' + str(i) for i in xrange(1, num_pages + 1)]:
             request = Request(soup_url, headers = header)
             soup = bs(urlopen(request))
