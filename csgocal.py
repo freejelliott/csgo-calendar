@@ -122,7 +122,7 @@ class CSGOCalendar:
                 day = int(m.groupdict()['day'])
                 start_hour = int(m.groupdict()['start_hour'])
                 start_min = int(m.groupdict()['start_min'])
-                datetime_info = datetime(2015, month, day, start_hour, start_min)
+                datetime_info = datetime(2016, month, day, start_hour, start_min)
                 stream_info = '-- Streams --\n'
                 if len(streams) == 0:
                     stream_info = 'A stream was not found for this match'
