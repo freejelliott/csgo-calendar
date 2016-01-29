@@ -102,8 +102,7 @@ class CSGOCalendar:
                         m = re.search('twitch|hitbox|mlg', str(stream_soup))
                         if m:
                             if m.group(0) == 'twitch':
-                                stream_urls.append(stream_soup.find('object')['data'])
-                                stream_urls[-1] = stream_urls[-1].replace('widgets/live_embed_player.swf?channel=', '')
+                                stream_urls.append(stream_soup.find('iframe')['src'])
                             elif m.group(0) == 'hitbox':
                                 stream_urls.append(stream_soup.find('iframe')['src'])
                                 stream_urls[-1] = stream_urls[-1].replace('#!/embed/', '')
