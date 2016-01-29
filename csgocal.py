@@ -134,10 +134,10 @@ class CSGOCalendar:
                     'summary' : summary,
                     'description' : '-- Event --\n  ' + league + ' | ' + best_of_format + '\n\n' + stream_info,
                     'start' : {
-                        'dateTime' : str(datetime_info.isoformat('T')) + '+02:00'
+                        'dateTime' : str(datetime_info.isoformat('T')) + '+01:00'
                     },
                     'end' : {
-                        'dateTime' : str((datetime_info+timedelta(hours=length)).isoformat('T')) + '+02:00'
+                        'dateTime' : str((datetime_info+timedelta(hours=length)).isoformat('T')) + '+01:00'
                     },
                     'source' : {
                         'url' : match_url
