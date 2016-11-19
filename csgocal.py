@@ -9,6 +9,7 @@ from bs4 import BeautifulSoup as bs
 from urllib2 import urlopen, Request
 from datetime import date, timedelta, datetime
 from oauth2client.client import SignedJwtAssertionCredentials
+from dateutil import parser, tz
 
 wdir = os.path.dirname(__file__)
 
@@ -37,33 +38,7 @@ class CSGOCalendar:
 
         self.calendarId = calendarId 
 
-        self.date_convers = {
-            'January' : '01',
-            'Jan' : '01',
-            'February' : '02',
-            'Feb' : '02',
-            'March' : '03',
-            'Mar' : '03',
-            'April' : '04',
-            'Apr' : '04',
-            'May' : '05',
-            'June' : '06',
-            'Jun' : '06',
-            'July' : '07',
-            'Jul' : '07',
-            'August' : '08',
-            'Aug' : '08',
-            'September' : '09',
-            'Sep' : '09',
-            'October' : '10',
-            'Oct' : '10',
-            'November' : '11',
-            'Nov' : '11',
-            'December' : '12',
-            'Dec' : '12'
-        }
-    
-    def update(self):
+    def scrape_data(self):
         url = 'http://www.gosugamers.net/counterstrike/gosubet?u-page=1'
         header = {'User-Agent' : 'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/40.0.2214.111 Safari/537.36'}
         request = Request(url, headers = header)
@@ -76,6 +51,7 @@ class CSGOCalendar:
             num_page_info = num_page_info.find_all('a')[-1]['href']
             m = re.search(r'\d+$', num_page_info)
             num_pages = int(m.group(0))
+        matches = []
         for soup_url in ['http://www.gosugamers.net/counterstrike/gosubet?u-page=' + str(i) for i in xrange(1, num_pages + 1)]:
             request = Request(soup_url, headers = header)
             soup = bs(urlopen(request))
@@ -116,12 +92,8 @@ class CSGOCalendar:
                 best_of_format = match_soup.find(class_='bestof').text.strip()
                 length = int(re.search('\d', best_of_format).group(0))
                 datetime_info = match_soup.find(class_='datetime').text.strip()
-                m = re.match('(?P<month>\w+) (?P<day>\d+), \w+, (?P<start_hour>\d\d):(?P<start_min>\d\d)', datetime_info)
-                month = int(self.date_convers[m.groupdict()['month']])
-                day = int(m.groupdict()['day'])
-                start_hour = int(m.groupdict()['start_hour'])
-                start_min = int(m.groupdict()['start_min'])
-                datetime_info = datetime(2016, month, day, start_hour, start_min)
+                tzinfos = {'CET': 3600, 'CEST': 7200}
+                match_datetime = parser.parse(datetime_info, tzinfos=tzinfos)
                 stream_info = '-- Streams --\n'
                 if len(streams) == 0:
                     stream_info = 'A stream was not found for this match'
@@ -133,16 +105,21 @@ class CSGOCalendar:
                     'summary' : summary,
                     'description' : '-- Event --\n  ' + league + ' | ' + best_of_format + '\n\n' + stream_info,
                     'start' : {
-                        'dateTime' : str(datetime_info.isoformat('T')) + '+01:00'
+                        'dateTime' : match_datetime.isoformat('T')
                     },
                     'end' : {
-                        'dateTime' : str((datetime_info+timedelta(hours=length)).isoformat('T')) + '+01:00'
+                        'dateTime' : (match_datetime+timedelta(hours=length)).isoformat('T')
                     },
                     'source' : {
                         'url' : match_url
                     }
                 }
-                self.addEvent(event)
+                matches.append(event)
+        return matches
+
+    def update(self):
+        for event in self.scrape_data():
+            self.addEvent(event)
 
     def addEvent(self, event):
         # Check if the event exists within a day by finding the match with the same league and summary.
